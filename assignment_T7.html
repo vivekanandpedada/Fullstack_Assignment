@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Number Pattern Generator</title>
+<style>
+:root{--bg:#0f1724;--card:#0b1220;--muted:#9aa7b8;--accent:#06b6d4}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071126 0%,#071a2b 100%);color:#e6eef8;font-family:Menlo,Monaco,monospace;display:flex;align-items:center;justify-content:center;padding:28px}
+.wrap{width:100%;max-width:880px}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+select,input,button{padding:8px 10px;border-radius:8px;border:0;outline:0;font-family:inherit}
+input[type=number]{width:90px}
+button.primary{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:white}
+.output{background:#021226;padding:14px;border-radius:8px;min-height:220px;white-space:pre;font-size:14px;line-height:1.4;overflow:auto}
+.row{display:block;transition:background 300ms ease}
+.row.even{background:linear-gradient(90deg,rgba(124,58,237,0.06),transparent)}
+.row.odd{background:linear-gradient(90deg,rgba(6,182,212,0.03),transparent)}
+.settings{display:flex;gap:8px;align-items:center}
+.small{font-size:13px;color:var(--muted)}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="panel">
+<h3 style="margin:0 0 10px 0">Number Pattern Generator</h3>
+<div class="controls">
+<select id="pattern">
+<option value="leftTriangle">Left Triangle</option>
+<option value="rightTriangle">Right Triangle</option>
+<option value="pyramid">Pyramid</option>
+<option value="invertedPyramid">Inverted Pyramid</option>
+<option value="diamond">Diamond</option>
+</select>
+<input id="size" type="number" min="1" value="5" title="size">
+<div class="settings small">
+<label><input id="pad" type="checkbox"> Pad numbers</label>
+<label style="margin-left:8px"><input id="sep" type="checkbox" checked> Space between numbers</label>
+</div>
+<button id="renderBtn" class="primary">Render</button>
+<button id="clearBtn">Clear</button>
+</div>
+<div id="output" class="output"></div>
+<div class="footer"><div class="small">Uses nested loops & string building</div><div class="small" id="rowsInfo">0 rows</div></div>
+</div>
+</div>
+<script>
+const patternEl=document.getElementById('pattern')
+const sizeEl=document.getElementById('size')
+const padEl=document.getElementById('pad')
+const sepEl=document.getElementById('sep')
+const out=document.getElementById('output')
+const renderBtn=document.getElementById('renderBtn')
+const clearBtn=document.getElementById('clearBtn')
+const rowsInfo=document.getElementById('rowsInfo')
+
+function pad(num, width){const s=String(num);return s.length>=width? s : ' '.repeat(width-s.length)+s}
+
+function leftTriangle(n){let lines=[];for(let r=1;r<=n;r++){let line='';for(let c=1;c<=r;c++){line+=format(c,r)+sep() }lines.push(line.trim())}return lines}
+function rightTriangle(n){let lines=[];for(let r=1;r<=n;r++){let line='';line+= ' '.repeat((n-r)*(padEl.checked? (String(n).length+ (sepEl.checked?1:0)) : 1))
+for(let c=1;c<=r;c++){line+=format(c,r)+sep() }lines.push(line.trimEnd())}return lines}
+function pyramid(n){let lines=[];for(let r=1;r<=n;r++){let line='';const spaces=n-r;line+=' '.repeat(spaces*(padEl.checked? String(n).length+ (sepEl.checked?1:0) : 1))
+for(let c=1;c<=r;c++){line+=format(c,r)+sep()}for(let c=r-1;c>=1;c--){line+=format(c,r)+sep()}lines.push(line.trimEnd())}return lines}
+function invertedPyramid(n){let lines=[];for(let r=n;r>=1;r--){let line='';const spaces=n-r;line+=' '.repeat(spaces*(padEl.checked? String(n).length+ (sepEl.checked?1:0) : 1))
+for(let c=1;c<=r;c++){line+=format(c,r)+sep()}for(let c=r-1;c>=1;c--){line+=format(c,r)+sep()}lines.push(line.trimEnd())}return lines}
+function diamond(n){let lines=[];for(let r=1;r<=n;r++){lines.push(pyramid(n)[r-1])}for(let r=n-1;r>=1;r--){lines.push(pyramid(n)[r-1])}return lines}
+
+function sep(){return sepEl.checked? ' ' : ''}
+function format(num,row){if(!padEl.checked) return String(num);const w=String(sizeEl.value).length;return pad(num,w)}
+
+function render(){const n=Math.max(1,Math.floor(Number(sizeEl.value)||1));let algo=patternEl.value;let lines=[];if(algo==='leftTriangle')lines=leftTriangle(n);if(algo==='rightTriangle')lines=rightTriangle(n);if(algo==='pyramid')lines=pyramid(n);if(algo==='invertedPyramid')lines=invertedPyramid(n);if(algo==='diamond')lines=diamond(n);
+out.innerHTML=''
+const frag=document.createDocumentFragment();lines.forEach((ln,i)=>{const div=document.createElement('div');div.className='row '+((i%2===0)?'even':'odd');div.textContent=ln;frag.appendChild(div)})
+out.appendChild(frag);rowsInfo.textContent=lines.length+ (lines.length===1? ' row' : ' rows')}
+
+renderBtn.addEventListener('click',render)
+clearBtn.addEventListener('click',()=>{out.innerHTML='';rowsInfo.textContent='0 rows'})
+
+// render on Enter
+sizeEl.addEventListener('keydown',e=>{if(e.key==='Enter')render()})
+patternEl.addEventListener('change',render)
+
+render()
+</script>
+</body>
+</html>
